@@ -1,0 +1,2 @@
+model_checkpoint_path: "deepq_doom_model.ckpt"
+all_model_checkpoint_paths: "deepq_doom_model.ckpt"
