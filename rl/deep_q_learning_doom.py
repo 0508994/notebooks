@@ -200,21 +200,21 @@ class DQNetwork:
             # Output layer [Q values for each action]
             self.output =  tf.layers.dense(\
                                        inputs = self.fc, \
-                                       units = 3, \
+                                       units = self.action_size, \
                                        activation = None, \
                                        kernel_initializer = tf.contrib.layers.xavier_initializer())  
 
             # Our predicted Q-value
+            # self.Q is a Q value for each state/action in a batch { [64, 3] * [64, 3]} ----> # batch_size=64 (so the result of this should be a 64 array of Q values)
             self.Q = tf.reduce_sum(tf.multiply(self.output, self.actions_), axis=1)
-            # >>> np.sum([1, 2, 3], axis=1)
-            # array([6])
-            # >>> np.sum([1, 2, 3], axis=0)
-            # array([1, 2, 3])
-            # >>> np.sum([1, 2, 3], axis=None) # default
-            # 6
-
-            # The loss is the difference between our predicted Q-values and Q_target
-            # Sum(Q-Target - Q)^2
+            # >>> import numpy as np
+            # >>> output = np.random.randn(64, 3)
+            # >>> actions_ = np.random.randn(64, 3)
+            # >>> np.sum(np.multiply(output, actions_)).shape
+            # ()
+            # >>> np.sum(np.multiply(output, actions_), axis=1).shape
+            # (64,) 
+            
             self.loss = tf.reduce_mean(tf.square(self.target_Q - self.Q))
             self.optimizer = tf.train.RMSPropOptimizer(self.learning_rate).minimize(self.loss)
 
@@ -301,7 +301,7 @@ if __name__ == '__main__':
     learning_rate = 0.0002                          # Alpha aka learning rate
 
     # Training hyperparameters
-    total_episodes = 501                           # Total training episodes
+    total_episodes = 2                           # Total training episodes
     max_steps = 100                                 # Maximum steps inside of each episode
     batch_size = 64
 
@@ -317,7 +317,7 @@ if __name__ == '__main__':
     pretrain_length = batch_size                    # Number of experiences stored in the memory when initiated for the first time
     memory_size = 5000
 
-    training = False
+    training = True
     episode_render = False
 
     tf.reset_default_graph()
@@ -406,18 +406,17 @@ if __name__ == '__main__':
 
                     targets_mb = np.array([each for each in target_Qs_batch])
 
-
                     loss, _ = sess.run([DQNetwork.loss, DQNetwork.optimizer],\
                                         feed_dict = {DQNetwork.inputs_:states_mb,\
-                                                    DQNetwork.target_Q: targets_mb,\
-                                                    DQNetwork.actions_:actions_mb})
+                                                     DQNetwork.target_Q: targets_mb,\
+                                                     DQNetwork.actions_:actions_mb})
 
                     # summary = sess.run(write_op, feed_dict = {DQNetwork.inputs:states_mb,\
                     #                                           DQNetwork.target_Q:targets_mb,\
                     #                                           DQNetwork.actions_:actions_mb})
                     # writer.add_summary(summary, episode)
                     # writer.flush()
-                        
+                
                 if episode % 50 == 0:
                     save_path = saver.save(sess, './models/deepq_doom_model.ckpt')
                     print('Model saved at {}.'.format(save_path))
