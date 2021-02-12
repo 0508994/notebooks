@@ -1,2 +1,0 @@
-model_checkpoint_path: "deepq_space_invaders_model.ckpt"
-all_model_checkpoint_paths: "deepq_space_invaders_model.ckpt"
